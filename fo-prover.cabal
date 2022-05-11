@@ -14,21 +14,19 @@ version:            0.1.0.0
 -- The license under which the package is released.
 -- license:
 author:             Mieszko Sabo
-maintainer:         mieszko.mac@gmail.com
+maintainer:         ms406322@students.mimuw.edu.pl
 
--- A copyright notice.
--- copyright:
--- category:
-extra-source-files: CHANGELOG.md
 
-executable fo-prover
+executable Fo-prover
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
     other-modules: 
         Parser,
         Formula,
-        Utils
+        Utils,
+        Prover,
+        Functions
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

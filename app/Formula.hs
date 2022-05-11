@@ -66,10 +66,8 @@ infix 9 ===, =/=
 u === v = Rel "=" [u, v]
 u =/= v = Not (u === v)
 
-type Substitution = Env Term
-
 -- apply a substitution on all free variables
-apply :: Substitution -> Formula -> Formula
+apply :: Env Term -> Formula -> Formula
 apply _ F = F
 apply _ T = T
 apply f (Rel r ts) = Rel r $ map (evalTerm Fun f) ts
@@ -138,3 +136,25 @@ fv (Forall x phi) = delete x $ fv phi
 
 phifun = Exists "x" (Rel "R" [Fun "f" [Var "x", Var "y"], Var "z"])
 prop_fv = fv phifun == ["y", "z"]
+
+-- enumerate variants of a variable name
+variants :: VarName -> [VarName]
+variants x = x : [x ++ show n | n <- [0..]]
+
+vars :: Formula -> [VarName]
+vars T = []
+vars F = []
+vars (Rel _ ts) = variables (Fun "dummy" ts)
+vars (Not phi) = vars phi
+vars (And phi psi) = nub $ vars phi ++ vars psi
+vars (Or phi psi) = nub $ vars phi ++ vars psi
+vars (Implies phi psi) = nub $ vars phi ++ vars psi
+vars (Iff phi psi) = nub $ vars phi ++ vars psi
+vars (Exists x phi) = nub $ x : vars phi
+vars (Forall x phi) = nub $ x : vars phi
+
+freshIn :: VarName -> Formula -> Bool
+x `freshIn` phi = x `notElem` vars phi
+
+freshVariant :: VarName -> Formula -> VarName
+freshVariant x phi = head [ y | y <- variants x, y `freshIn` phi ]

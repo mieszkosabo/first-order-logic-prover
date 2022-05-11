@@ -16,8 +16,8 @@ import Test.QuickCheck hiding (Fun, (===))
 
 import Formula
 import Parser hiding (one)
+import Prover (prover)
 
-prover _ = True
 
 main :: IO ()
 main = do

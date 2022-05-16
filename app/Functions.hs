@@ -57,13 +57,13 @@ pnf' (Not a) = Not $ pnf' a
 pnf' r@(Rel _ _) = r
 pnf' (Forall x phi) = Forall x (pnf' phi)
 pnf' (Exists x phi) = Exists x (pnf' phi)
-pnf' (And a b) = pnf'Bin (pnf' a) (pnf' b) And
-pnf' (Or a b) = pnf'Bin (pnf' a) (pnf' b) Or
+pnf' (And a b) = pnf'BinAnd (pnf' a) (pnf' b)
+pnf' (Or a b) = pnf'BinOr (pnf' a) (pnf' b)
 
 pnf'QQ q1 x a q2 y b op = let
     x' = freshVariant2 x a b
     a' = rename x x' a
-    y' = freshVariant y a
+    y' = freshVariant2 y a b
     b' = rename y y' b
     in q1 x' (q2 y' (pnf' (op a' b')))
 
@@ -71,6 +71,20 @@ pnf'Q q x a b op = let
     x' = freshVariant2 x a b
     a' = rename x x' a
     in q x' (pnf' (op a' b))
+
+pnf'BinAnd (Forall x a) (Forall y b) = let
+    x' = if x == y then x else freshVariant2 x a b
+    a' = if x == y then a else rename x x' a
+    b' = if x == y then b else rename y x' b
+    in Forall x' (pnf' (And a' b'))
+pnf'BinAnd a b = pnf'Bin a b And
+
+pnf'BinOr (Exists x a) (Exists y b) = let
+    x' = if x == y then x else freshVariant2 x a b
+    a' = if x == y then a else rename x x' a
+    b' = if x == y then b else rename y x' b
+    in Exists x' (pnf' (Or a' b'))
+pnf'BinOr a b = pnf'Bin a b Or
 
 pnf'Bin (Forall x a) (Forall y b) op = pnf'QQ Forall x a Forall y b op
 pnf'Bin (Forall x a) (Exists y b) op = pnf'QQ Forall x a Exists y b op
@@ -81,6 +95,7 @@ pnf'Bin (Exists x a) b op = pnf'Q Exists x a b op
 pnf'Bin b (Exists x a) op = pnf'Q Exists x a b op
 pnf'Bin (Forall x a) b op = pnf'Q Forall x a b op
 pnf'Bin b (Forall x a) op = pnf'Q Forall x a b op
+
 pnf'Bin a b op = op a b
 
 generalise :: Formula -> Formula

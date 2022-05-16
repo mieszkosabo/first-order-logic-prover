@@ -158,3 +158,6 @@ x `freshIn` phi = x `notElem` vars phi
 
 freshVariant :: VarName -> Formula -> VarName
 freshVariant x phi = head [ y | y <- variants x, y `freshIn` phi ]
+
+freshVariant2 :: VarName -> Formula -> Formula -> VarName
+freshVariant2 x phi rho = head [y | y <- variants x, y `freshIn` phi && y `freshIn` rho]

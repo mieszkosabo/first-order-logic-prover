@@ -60,35 +60,27 @@ pnf' (Exists x phi) = Exists x (pnf' phi)
 pnf' (And a b) = pnf'Bin (pnf' a) (pnf' b) And
 pnf' (Or a b) = pnf'Bin (pnf' a) (pnf' b) Or
 
-pnf'Bin (Forall x a) (Forall y b) op = let
-    x' = freshVariant x b
+pnf'QQ q1 x a q2 y b op = let
+    x' = freshVariant2 x a b
+    a' = rename x x' a
     y' = freshVariant y a
-    in Forall x' (Forall y' (pnf' (op a b)))
-pnf'Bin (Forall x a) (Exists y b) op = let
-    x' = freshVariant x b
-    y' = freshVariant y a
-    in Forall x' (Exists y' (pnf' (op a b)))
-pnf'Bin (Exists x a) (Exists y b) op = let
-    x' = freshVariant x b
-    y' = freshVariant y a
-    in Exists x' (Exists y' (pnf' (op a b)))
-pnf'Bin (Exists x a) (Forall y b) op = let
-    x' = freshVariant x b
-    y' = freshVariant y a
-    in Exists x' (Forall y' (pnf' (op a b)))
+    b' = rename y y' b
+    in q1 x' (q2 y' (pnf' (op a' b')))
 
-pnf'Bin (Exists x a) b op = let
-    x' = freshVariant x b
-    in Exists x' (pnf' (op a b))
-pnf'Bin b (Exists x a) op = let
-    x' = freshVariant x b
-    in Exists x' (pnf' (op a b))
-pnf'Bin (Forall x a) b op = let
-    x' = freshVariant x b
-    in Forall x' (pnf' (op a b))
-pnf'Bin b (Forall x a) op = let
-    x' = freshVariant x b
-    in Forall x' (pnf' (op a b))
+pnf'Q q x a b op = let
+    x' = freshVariant2 x a b
+    a' = rename x x' a
+    in q x' (pnf' (op a' b))
+
+pnf'Bin (Forall x a) (Forall y b) op = pnf'QQ Forall x a Forall y b op
+pnf'Bin (Forall x a) (Exists y b) op = pnf'QQ Forall x a Exists y b op
+pnf'Bin (Exists x a) (Exists y b) op = pnf'QQ Exists x a Exists y b op
+pnf'Bin (Exists x a) (Forall y b) op = pnf'QQ Exists x a Forall y b op
+
+pnf'Bin (Exists x a) b op = pnf'Q Exists x a b op
+pnf'Bin b (Exists x a) op = pnf'Q Exists x a b op
+pnf'Bin (Forall x a) b op = pnf'Q Forall x a b op
+pnf'Bin b (Forall x a) op = pnf'Q Forall x a b op
 pnf'Bin a b op = op a b
 
 generalise :: Formula -> Formula

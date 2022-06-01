@@ -63,7 +63,7 @@ pnf' (Or a b) = pnf'BinOr (pnf' a) (pnf' b)
 pnf'QQ q1 x a q2 y b op = let
     x' = freshVariant2 x a b
     a' = rename x x' a
-    y' = freshVariant2 y a b
+    y' = freshVariant2 y a' b
     b' = rename y y' b
     in q1 x' (q2 y' (pnf' (op a' b')))
 

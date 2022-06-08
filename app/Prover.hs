@@ -3,12 +3,8 @@ module Prover where
 import Formula
 import Functions
 import Data.List (nub)
+import Control.Monad
 import Utils
-
-prover :: Formula -> Bool
-prover = aedecide
-
-
 
 type Arity = Int
 type Signature = [(FunName, Arity)]
@@ -32,8 +28,12 @@ sig (Forall _ phi) = sig phi
 constants :: Signature -> [Term]
 constants s = [Fun c [] | (c, 0) <- s]
 
+signatureWithoutConstants :: Signature -> Signature
+signatureWithoutConstants = filter (\(_, n) -> n > 0)
+
 choose :: Int -> [a] -> [[a]]
-choose n list = sequence $ replicate n list
+choose = replicateM
+
 createFunctionFromPairs pairs = foldr (\(x, y) fun -> update fun x y) (\x -> Var x) pairs
 
 groundInstances :: Formula -> [Term] -> [Formula]
@@ -69,17 +69,48 @@ sat phi = or [ev int phi | int <- functions atoms [True, False]]
         ev int (And φ ψ) = ev int φ && ev int ψ
         ev _ φ = error $ "unexpected formula: " ++ show φ
 
+isHerbrandUniverseFinite :: Signature -> Bool
+isHerbrandUniverseFinite sig = null $ signatureWithoutConstants sig
+
+generateElementsOfHerbrandUniverse :: Formula -> Signature -> [Term]
+generateElementsOfHerbrandUniverse phi sig = if isHerbrandUniverseFinite sig
+  then herbrandConstants
+  else generateAllElements herbrandConstants (signatureWithoutConstants sig)
+    where herbrandConstants = if null (constants sig) then [Fun (freshVariant "c" phi) []] else constants sig
+
+-- recursively generate all herbrand elements eg. c, f(c), f(f(c)), etc.
+generateAllElements :: [Term] -> Signature -> [Term]
+generateAllElements set sig = set ++ generateAllElements (concatMap (step set) sig) sig 
+  where 
+    step :: [Term] -> (FunName, Arity) -> [Term]
+    step elements (fName, arity) = map (Fun fName) (choose arity elements)
+
 removePrefixOfUniversalQuantifiers :: Formula -> Formula
 removePrefixOfUniversalQuantifiers (Forall _ a) = removePrefixOfUniversalQuantifiers a
 removePrefixOfUniversalQuantifiers b = b
 
-aedecide :: Formula -> Bool
-aedecide phi = let
-  closed = generalise phi -- 1
-  negated = Not closed -- 2
-  skolemised = skolemise negated -- 3
-  withoutPrefix = removePrefixOfUniversalQuantifiers skolemised -- 4
-  -- if herbrand universe is empty then we add an additional constant, else we dont have to
-  consts = if null (constants $ sig withoutPrefix) then [Fun (freshVariant "c" withoutPrefix) []] else constants $ sig withoutPrefix
-  gi = groundInstances withoutPrefix consts -- 5
-  in not $ sat $ foldr And T gi
+prover :: Formula -> Bool
+prover phi = let
+  closed = generalise phi
+  negated = Not closed
+  skolemised = skolemise negated
+  withoutPrefix = removePrefixOfUniversalQuantifiers skolemised
+  isFinite = isHerbrandUniverseFinite $ sig withoutPrefix
+  groundTerms  = generateElementsOfHerbrandUniverse withoutPrefix (sig withoutPrefix)
+  in if isFinite then
+    -- (C.2)
+    not $ sat $ foldr And T (groundInstances withoutPrefix groundTerms)
+    else if null $ fv withoutPrefix then
+      -- (C.1)
+      not $ sat withoutPrefix
+  else 
+    -- (A or B)
+    startChecking 1 withoutPrefix groundTerms
+
+startChecking :: Int -> Formula -> [Term] -> Bool
+startChecking howManyElementsToTake phi groundTerms = 
+  isTauto || startChecking (howManyElementsToTake + 1) phi groundTerms
+  where
+    isTauto = not $ sat $ foldr And T gi
+    gi = groundInstances phi termsToCheck
+    termsToCheck = take howManyElementsToTake groundTerms

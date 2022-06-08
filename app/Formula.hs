@@ -38,7 +38,6 @@ evalTerm int rho (Fun f ts) = int f $ map (evalTerm int rho) ts
 data Formula =
       F
     | T
-    | Prop VarName
     | Rel RelName [Term]
     | Not Formula
     | Or Formula Formula

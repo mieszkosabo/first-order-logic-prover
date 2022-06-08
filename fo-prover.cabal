@@ -2,17 +2,6 @@ cabal-version:      2.4
 name:               fo-prover
 version:            0.1.0.0
 
--- A short (one-line) description of the package.
--- synopsis:
-
--- A longer description of the package.
--- description:
-
--- A URL where users can report bugs.
--- bug-reports:
-
--- The license under which the package is released.
--- license:
 author:             Mieszko Sabo
 maintainer:         ms406322@students.mimuw.edu.pl
 
@@ -35,6 +24,5 @@ executable Fo-prover
         parsec ^>= 3.1.14.0,
         QuickCheck ^>= 2.14.1,
         mtl ^>= 2.2.2,
-        random ^>= 1.2.1
     hs-source-dirs:   app
     default-language: Haskell2010

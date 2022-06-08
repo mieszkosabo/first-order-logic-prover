@@ -1,19 +1,6 @@
-{-# LANGUAGE UnicodeSyntax, TypeSynonymInstances, FlexibleInstances, LambdaCase #-}
 
 module Main where
-
-import Data.List
-
-import System.IO
-import System.Random
-import System.Timeout
-
-import Text.Printf
-
-import Control.Monad.State
-
-import Test.QuickCheck hiding (Fun, (===))
-
+import System.IO ( isEOF )
 import Formula
 import Parser hiding (one)
 import Prover (prover)
@@ -21,7 +8,7 @@ import Prover (prover)
 
 main :: IO ()
 main = do
-    eof <- hIsEOF stdin
+    eof <- isEOF
     if eof
         then return ()
         else do

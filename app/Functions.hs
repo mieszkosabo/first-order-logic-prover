@@ -28,7 +28,6 @@ rename x y (Exists z phi)
   | otherwise = Exists z (rename x y phi)
 
 nnf :: Formula -> Formula
-nnf r@(Prop _) = r
 nnf (Implies a b) = Or (nnf $ Not a) (nnf b)
 nnf (Iff a b) = Or (And (nnf a) (nnf b)) (And (nnf $ Not a) (nnf $ Not b))
 nnf (Not a) = case a' of
@@ -38,7 +37,6 @@ nnf (Not a) = case a' of
   F -> T
   T -> F
   r@(Rel _ _) -> Not r
-  r@(Prop _) -> Not r
   (Exists x phi) -> Forall x (nnf $ Not phi)
   (Forall x phi) -> Exists x (nnf $ Not phi)
   where a' = nnf a

@@ -160,13 +160,3 @@ freshVariant x phi = head [ y | y <- variants x, y `freshIn` phi ]
 
 freshVariant2 :: VarName -> Formula -> Formula -> VarName
 freshVariant2 x phi rho = head [y | y <- variants x, y `freshIn` phi && y `freshIn` rho]
-
-removeQuantifiers :: Formula -> Formula
-removeQuantifiers (Not phi) = Not $ removeQuantifiers phi
-removeQuantifiers (Or phi psi) = Or (removeQuantifiers phi) (removeQuantifiers psi)
-removeQuantifiers (And phi psi) = And (removeQuantifiers phi) (removeQuantifiers psi)
-removeQuantifiers (Implies phi psi) = Implies (removeQuantifiers phi) (removeQuantifiers psi)
-removeQuantifiers (Iff phi psi) = Iff (removeQuantifiers phi) (removeQuantifiers psi)
-removeQuantifiers (Exists _ phi) = removeQuantifiers phi
-removeQuantifiers (Forall _ phi) = removeQuantifiers phi
-removeQuantifiers x = x

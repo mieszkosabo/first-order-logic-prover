@@ -1,4 +1,4 @@
-{-# LANGUAGE UnicodeSyntax, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE UnicodeSyntax, FlexibleInstances #-}
 
 module Formula where
 
@@ -38,6 +38,7 @@ evalTerm int rho (Fun f ts) = int f $ map (evalTerm int rho) ts
 data Formula =
       F
     | T
+    | Prop VarName
     | Rel RelName [Term]
     | Not Formula
     | Or Formula Formula
@@ -118,7 +119,6 @@ instance Arbitrary Formula where
   shrink (Forall _ varphi) = [varphi]
   shrink _ = []
 
-type SATSolver = Formula -> Bool
 type FOProver = Formula -> Bool
 
 -- find all free variables
@@ -161,3 +161,13 @@ freshVariant x phi = head [ y | y <- variants x, y `freshIn` phi ]
 
 freshVariant2 :: VarName -> Formula -> Formula -> VarName
 freshVariant2 x phi rho = head [y | y <- variants x, y `freshIn` phi && y `freshIn` rho]
+
+removeQuantifiers :: Formula -> Formula
+removeQuantifiers (Not phi) = Not $ removeQuantifiers phi
+removeQuantifiers (Or phi psi) = Or (removeQuantifiers phi) (removeQuantifiers psi)
+removeQuantifiers (And phi psi) = And (removeQuantifiers phi) (removeQuantifiers psi)
+removeQuantifiers (Implies phi psi) = Implies (removeQuantifiers phi) (removeQuantifiers psi)
+removeQuantifiers (Iff phi psi) = Iff (removeQuantifiers phi) (removeQuantifiers psi)
+removeQuantifiers (Exists _ phi) = removeQuantifiers phi
+removeQuantifiers (Forall _ phi) = removeQuantifiers phi
+removeQuantifiers x = x

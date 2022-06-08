@@ -28,6 +28,7 @@ rename x y (Exists z phi)
   | otherwise = Exists z (rename x y phi)
 
 nnf :: Formula -> Formula
+nnf r@(Prop _) = r
 nnf (Implies a b) = Or (nnf $ Not a) (nnf b)
 nnf (Iff a b) = Or (And (nnf a) (nnf b)) (And (nnf $ Not a) (nnf $ Not b))
 nnf (Not a) = case a' of
@@ -37,6 +38,7 @@ nnf (Not a) = case a' of
   F -> T
   T -> F
   r@(Rel _ _) -> Not r
+  r@(Prop _) -> Not r
   (Exists x phi) -> Forall x (nnf $ Not phi)
   (Forall x phi) -> Exists x (nnf $ Not phi)
   where a' = nnf a
@@ -130,8 +132,8 @@ fresh phi = evalState (go phi) []
              put $ y : xs
              liftM (quantifier y) $ go psi
 
--- skolemise
 
+-- TODO: add miniscoping for perf improvements
 skolemise :: Formula -> Formula
 skolemise =
   pnf . replaceWithSkolemFunctions . fresh . nnf . existentialise
@@ -176,9 +178,9 @@ replaceWithSkolemFunctions' (Not r@(Rel _ _)) = do
   r' <- replaceWithSkolemFunctions' r
   return $ Not r'
 -- following 3 cases are undefined bc we are in nnf
-replaceWithSkolemFunctions' (Implies _ _) = error "imp" 
-replaceWithSkolemFunctions' (Iff _ _) = error "iff"
-replaceWithSkolemFunctions' (Not a) = error "elo"
+replaceWithSkolemFunctions' (Implies _ _) = undefined
+replaceWithSkolemFunctions' (Iff _ _) = undefined
+replaceWithSkolemFunctions' (Not a) = undefined
 replaceWithSkolemFunctions' (And a b) = do
   currState <- get
   a' <- replaceWithSkolemFunctions' a

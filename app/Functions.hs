@@ -130,8 +130,8 @@ fresh phi = evalState (go phi) []
              put $ y : xs
              liftM (quantifier y) $ go psi
 
--- skolemise
 
+-- TODO: add miniscoping for perf improvements
 skolemise :: Formula -> Formula
 skolemise =
   pnf . replaceWithSkolemFunctions . fresh . nnf . existentialise
@@ -176,9 +176,9 @@ replaceWithSkolemFunctions' (Not r@(Rel _ _)) = do
   r' <- replaceWithSkolemFunctions' r
   return $ Not r'
 -- following 3 cases are undefined bc we are in nnf
-replaceWithSkolemFunctions' (Implies _ _) = error "imp" 
-replaceWithSkolemFunctions' (Iff _ _) = error "iff"
-replaceWithSkolemFunctions' (Not a) = error "elo"
+replaceWithSkolemFunctions' (Implies _ _) = undefined
+replaceWithSkolemFunctions' (Iff _ _) = undefined
+replaceWithSkolemFunctions' (Not a) = undefined
 replaceWithSkolemFunctions' (And a b) = do
   currState <- get
   a' <- replaceWithSkolemFunctions' a

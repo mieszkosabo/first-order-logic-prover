@@ -1,6 +1,6 @@
 # First order logic tautology prover
 
-You should have `cabal` installed in order to build this project.
+You should have `cabal` installed in order to build this project (tested on students).
 
 Build with `make`
 
